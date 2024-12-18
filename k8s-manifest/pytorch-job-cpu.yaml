@@ -1,0 +1,61 @@
+apiVersion: "kubeflow.org/v1"
+kind: "PyTorchJob"
+metadata:
+  name: "pytorchjob-distributed-training"
+spec:
+  # ttlSecondsAfterFinished: 600  # Keeps pods for 10 minutes after completion
+  #cleanPodPolicy: None    # Pods remain after job completes
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          terminationGracePeriodSeconds: 600  # 10 minutes
+          containers:
+            - name: pytorch
+              image: longtong/pytorch-cpu
+              imagePullPolicy: Always
+              args:
+                - "--nnodes=2"
+                - "--nproc_per_node=2"
+                - "--node_rank=0"
+                - "--rdzv-id=456"
+                - "--rdzv-backend=c10d"
+                - "--rdzv-endpoint=pytorchjob-distributed-training-master-0.default.svc.cluster.local:29500"
+                - "distributed-training-2.py"
+              env:
+                - name: GLOO_SOCKET_IFNAME
+                  value: "eth0"
+                - name: TP_SOCKET_IFNAME
+                  value: "eth0"
+    Worker:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          terminationGracePeriodSeconds: 600  # 10 minutes
+          containers:
+            - name: pytorch
+              image: longtong/pytorch-cpu
+              imagePullPolicy: Always
+              args:
+                - "--nnodes=2"
+                - "--nproc_per_node=2"
+                - "--node_rank=1"
+                - "--rdzv-id=456"
+                - "--rdzv-backend=c10d"
+                - "--rdzv-endpoint=pytorchjob-distributed-training-master-0.default.svc.cluster.local:29500"
+                - "distributed-training-2.py"
+              env:
+                - name: GLOO_SOCKET_IFNAME
+                  value: "eth0"
+                - name: TP_SOCKET_IFNAME
+                  value: "eth0"
+

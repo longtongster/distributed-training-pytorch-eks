@@ -1,0 +1,42 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: pytorch-training-cluster
+  region: us-east-1
+  version: "1.27"
+
+# Enable OIDC provider
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: pytorch-training-sa
+        namespace: default
+      attachPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+            Resource:
+              - "arn:aws:s3:::pytorch-svw"
+              - "arn:aws:s3:::pytorch-svw/*"
+
+managedNodeGroups:
+  - name: cpu-nodes
+    instanceType: m5.large
+    minSize: 2
+    maxSize: 3
+    desiredCapacity: 2
+    labels:
+      role: cpu-worker
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/pytorch-training-cluster: "owned"
+
+# Optional: Add CloudWatch logging
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["api", "audit", "authenticator", "controllerManager", "scheduler"]

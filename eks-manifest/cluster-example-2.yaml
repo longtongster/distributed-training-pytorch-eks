@@ -1,0 +1,58 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: pytorch-training-cluster
+  region: us-east-1
+  version: "1.27"
+
+# Enable OIDC provider
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: pytorch-training-sa
+        namespace: default
+      # policy arn for both aws managed policy and customer created policies
+      # this requires the policy to be already available
+      attachPolicyARNs:
+        - "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"  # You can replace this with your custom policy
+      # only a small set of available policies are available here.
+      wellKnownPolicies:
+        s3FullAccess: true  # Grants full S3 access, or you can use custom policies
+      # create and attach a policy directly
+      attachPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+            Resource:
+              - "arn:aws:s3:::your-bucket-name"
+              - "arn:aws:s3:::your-bucket-name/*"
+
+
+
+managedNodeGroups:
+  - name: cpu-nodes
+    instanceType: m5.large
+    minSize: 2
+    maxSize: 3
+    desiredCapacity: 2
+    # Add labels if needed
+    labels:
+      role: cpu-worker
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/pytorch-training-cluster: "owned"
+    # Optional: Add taints if you want to dedicate nodes
+    # taints:
+    #   - key: dedicated
+    #     value: pytorch
+    #     effect: NoSchedule
+
+# Optional: Add CloudWatch logging
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["api", "audit", "authenticator", "controllerManager", "scheduler"]

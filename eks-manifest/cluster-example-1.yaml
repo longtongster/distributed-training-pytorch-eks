@@ -1,0 +1,14 @@
+# this creates an EKS cluster on AWS with a managed node group
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: pytorch-training-cluster
+  region: us-east-1
+  version: "1.27"
+
+managedNodeGroups:
+  - name: cpu-nodes
+    instanceType: m5.large
+    minSize: 2
+    maxSize: 3
+    desiredCapacity: 2
