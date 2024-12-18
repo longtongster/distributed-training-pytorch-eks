@@ -70,7 +70,9 @@ Especially leveraging torchrun simplifies the steps towards distributed training
 
 train on local machine
 
-`torchrun --standalone --nnodes=1 --nproc-per-node 2 distributed-training-2.py`
+```
+torchrun --standalone --nnodes=1 --nproc-per-node 2 distributed-training.py`
+```
 
 This starts training on one node (our local machine) with 2 processes on this node.
 
@@ -146,44 +148,49 @@ kubectl describe pytorchjob pytorchjob-distributed-training
 
 ```
 # check logs for master
-kubectl logs -f pytorch-training-master-0
+kubectl logs pytorchjob-distributed-training-master-0
 ```
 
 ```
 # check logs for worker
-kubectl logs -f pytorch-training-worker-0
+kubectl logs -f pytorchjob-distributed-training-worker-0
 ```
 
-The code in `distributed-training.py` runs.
-`torchrun --nproc_per_node=2 distributed-training.py`
+## STEP 8 - Test connectiviy
 
+You can also check the connectivity with the objects created by the PytorchJob. For this we create a test pod'
 
-### Test connectiviy
+```
+kubectl apply -f debug-pod.yaml
+```
 
-Create a test pod
-
-`kubectl apply -f debug-pod.yaml`
-
+```
 # Get into the pod
 kubectl exec -it network-debug -- sh
+```
 
-# Once inside, you can run various network tests:
+Once inside, you can run various network tests:
+```
 # Test DNS resolution
 nslookup pytorchjob-distributed-training-master-0
-
+```
+```
 # Try pinging the IP address directly
 ping 192.168.35.254
-
+```
+```
 # Ping the master pod
 ping pytorchjob-distributed-training-master-0
-
+```
 My experience is that sometimes the service discovery might take a while. Check the logs of the pod to see if they have started training and only then execute the commands below. 
 
+```
 # Test if port is accessible
 nc -zv pytorchjob-distributed-training-master-0 29500
-
+```
+```
 nc -zv pytorchjob-distributed-training-master-0.default.svc.cluster.local 29500
-
+```
 # Check all pods in the namespace
 wget -qO- http://pytorchjob-distributed-training-master-0:29500
 
