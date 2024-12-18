@@ -125,7 +125,6 @@ check if the correct images is used.
 kubectl describe pod pytorchjob-distributed-training-master-0 | grep "Image:"
 ```
 
-
 ```
 # check job status
 kubectl get pytorchjob
@@ -151,9 +150,36 @@ kubectl describe pytorchjob pytorchjob-distributed-training
 kubectl logs pytorchjob-distributed-training-master-0
 ```
 
+A snapshot of the logs on the master is given below:
+```
+World size: 4 Global rank: 0, local rank 0 loss: 0.048418  [12864/60000]
+World size: 4 Global rank: 1, local rank 1 loss: 0.159579  [12864/60000]
+World size: 4 Global rank: 0, local rank 0 loss: 0.060968  [13504/60000]
+World size: 4 Global rank: 1, local rank 1 loss: 0.021444  [13504/60000]
+World size: 4 Global rank: 1, local rank 1 loss: 0.118829  [14144/60000]
+World size: 4 Global rank: 0, local rank 0 loss: 0.086896  [14144/60000]
+World size: 4 Global rank: 0, local rank 0 loss: 0.207089  [14784/60000]
+World size: 4 Global rank: 1, local rank 1 loss: 0.078822  [14784/60000]
+Test Error: 
+ Accuracy: 96.7%, Avg loss: 0.434307 
+```
+
 ```
 # check logs for worker
 kubectl logs -f pytorchjob-distributed-training-worker-0
+```
+
+A snapshot of the logs is given below:
+```
+World size: 4 Global rank: 2, local rank 0 loss: 0.122862  [12224/60000]
+World size: 4 Global rank: 3, local rank 1 loss: 0.143458  [12224/60000]
+World size: 4 Global rank: 2, local rank 0 loss: 0.160257  [12864/60000]
+World size: 4 Global rank: 3, local rank 1 loss: 0.228271  [12864/60000]
+World size: 4 Global rank: 2, local rank 0 loss: 0.042539  [13504/60000]
+World size: 4 Global rank: 3, local rank 1 loss: 0.074508  [13504/60000]
+World size: 4 Global rank: 3, local rank 1 loss: 0.083691  [14144/60000]
+World size: 4 Global rank: 2, local rank 0 loss: 0.071444  [14144/60000]
+World size: 4 Global rank: 2, local rank 0 loss: 0.109462  [14784/60000]
 ```
 
 ## STEP 8 - Test connectiviy
@@ -182,7 +208,7 @@ ping 192.168.35.254
 # Ping the master pod
 ping pytorchjob-distributed-training-master-0
 ```
-My experience is that sometimes the service discovery might take a while. Check the logs of the pod to see if they have started training and only then execute the commands below. 
+My experience is that sometimes the service discovery might take a while. Check the logs of the pod to see if they have started training and only then execute the commands below. In order to decrease the discovery we added some environment variables to the `pytorch-lob-cpu.yaml` in order to reduce it but I am not sure tha this will succeed.  
 
 ```
 # Test if port is accessible
@@ -191,15 +217,11 @@ nc -zv pytorchjob-distributed-training-master-0 29500
 ```
 nc -zv pytorchjob-distributed-training-master-0.default.svc.cluster.local 29500
 ```
+```
 # Check all pods in the namespace
 wget -qO- http://pytorchjob-distributed-training-master-0:29500
+```
 
-
-You can watch the pods come up with:
-
-kubectl get pods -w
-
-Check job status with:
 
 kubectl get pytorchjob
 For logs from all pods:
