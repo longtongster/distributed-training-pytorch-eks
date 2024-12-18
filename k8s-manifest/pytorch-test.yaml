@@ -1,0 +1,60 @@
+apiVersion: "kubeflow.org/v1"
+kind: "PyTorchJob"
+metadata:
+  name: "pytorchjob-distributed-training"
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          containers:
+            - name: pytorch
+              image: longtong/pytorch-cpu
+              imagePullPolicy: IfNotPresent
+              command:
+                - python3
+                - "-m"
+                - "torch.distributed.launch"
+                - "--nproc_per_node=2"
+                - "--nnodes=4"  # total number of nodes (master + workers)
+                - "--node_rank=0"
+                - "--master_addr=$(MASTER_ADDR)"
+                - "--master_port=29500"
+                - "distributed-training.py"
+              env:
+                - name: MASTER_ADDR
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.podIP
+                - name: MASTER_PORT
+                  value: "29500"
+    Worker:
+      replicas: 3
+      restartPolicy: OnFailure
+      template:
+        spec:
+          containers:
+            - name: pytorch
+              image: longtong/pytorch-cpu
+              imagePullPolicy: IfNotPresent
+              command:
+                - python3
+                - "-m"
+                - "torch.distributed.launch"
+                - "--nproc_per_node=2"
+                - "--nnodes=4"  # total number of nodes (master + workers)
+                - "--node_rank=$(RANK)"
+                - "--master_addr=$(MASTER_ADDR)"
+                - "--master_port=29500"
+                - "distributed-training.py"
+              env:
+                - name: MASTER_ADDR
+                  value: "$(PYTORCHJOB_DISTRIBUTED_TRAINING_MASTER_0_POD_IP)"
+                - name: MASTER_PORT
+                  value: "29500"
+                - name: RANK
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['worker-rank']

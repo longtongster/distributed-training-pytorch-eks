@@ -4,6 +4,10 @@ To give a step by step guide one how to setup distributed pytorch training on an
 
 https://vmware.github.io/vSphere-machine-learning-extension/user-guide/training-pytorchjob.html
 
+## TODO
+
+- the current `pytorch-job-cpu.yaml` only facilitates one master and one node. The `pytorch-test.yaml` is in progress. Amazon Q gave some suggestions to make it more flexible. These work but I do not yet fully understand them.!
+
 ## STEP 1 - create IAM user
 
 The first step is to create a user with admin permissions and keys to programmatically acces aws resources (this is required to use `eksctl create`).
