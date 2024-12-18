@@ -1,9 +1,6 @@
-working files:
-`cluster.yaml`
-`distributed-training-2.py`
-`Dockerfile2`
-`pytorch-job-cpu.yaml` 
+# Objective:
 
+To give a step by step guide one how to setup distributed pytorch training on an AWS EKS cluster. I did not easily find any instructions on the web on how to set this up. The setup only includes the code for a `cpu` setup since the sandbox that I use does not allow spinning up GPU instanes. However the changes to make are really simple. 
 
 https://vmware.github.io/vSphere-machine-learning-extension/user-guide/training-pytorchjob.html
 
@@ -45,21 +42,21 @@ kubectl get nodes
 
 After the cluster is created use the following command to install the kubeflow training operator
 
-`
-kubectl apply -k "github.com/kubeflow/training-operator/manifests/overlays/standalone?ref=v1.5.0"`
-`
+```
+kubectl apply -k "github.com/kubeflow/training-operator/manifests/overlays/standalone?ref=v1.5.0"
+```
 
 run 
 
-`
+```
 kubectl get crd
-`
+```
 
-this should show that we have `pytorchjobs.kubeflow.org` installed
+This should show that we have `pytorchjobs.kubeflow.org` installed. Check that the training operator is running via:
 
-check that the training operator is running via:
-
-`kubectl get pods -n kubeflow`
+```
+kubectl get pods -n kubeflow
+```
 
 this should show that we have the `training-operator-xxxx` running.
 
@@ -84,37 +81,47 @@ Please note that this script was setup to train on cpu's. It uses the 'gloo' bac
 
 See the `Dockerfile` used to create an image that has pytorch and boto3 installed. Note that also the train and test data is copied in the image. Normally you want to access data remotely (e.g. s3, EBS, EFS). For now it was done to just have a smoother operation. 
 
-build the docker image using:
+Build the docker image using:
 
 `
 docker build -t longtong/pytorch-cpu -f docker/Dockerfile .
 `
 
-if the images has not the username included use `docker tag <image-name> <username>/<image-name>`.
+Since we run the notebook from a different directory we have to let docker know where to find the `Dockerfile`. Here we already included the username of my github repository. If you have an existing image that you want to push to your repository your first have to tag the image using `docker tag <image-name> <username>/<image-name>`.
 
 Test the container locally
 
-`docker run --rm longtong/cpu`
+```
+docker run --rm longtong/cpu
+```
 
-In order to use the image in kubernetes we need to push it to a central repositry.
+In order to use the image in kubernetes we need to push it to a central repositry (this can alos be AWS ECR)
 
-`docker push longtong/pytorch-cpu`
+```
+docker push longtong/pytorch-cpu
+```
 
 now the image is ready to be pulled from docker hub on our eks cluster. 
 
-## STEP 6 - run distributed training on EKS cluster
+## STEP 7 - run distributed training on EKS cluster
 
 It took me quite some time to get the training script and the pytorch job working correclty. But now we are ready to execute the training job on our eks cluster:
 
-`kubectl apply -f pytorch-job-cpu.yaml`
+```
+kubectl apply -f ./k8s-manifest/pytorch-job-cpu.yaml
+```
 
 monitor the training:
 
-`kubectl get events --sort-by='.metadata.creationTimestamp'`
+```
+kubectl get events --sort-by='.metadata.creationTimestamp'
+```
 
 check if the correct images is used.
 
-`kubectl describe pod pytorchjob-distributed-training-master-0 | grep "Image:"`
+```
+kubectl describe pod pytorchjob-distributed-training-master-0 | grep "Image:"
+```
 
 
 ```
@@ -134,7 +141,7 @@ kubectl get pods -w
 
 ```
 # get more details
-kubectl describe pytorchjob pytorch-training
+kubectl describe pytorchjob pytorchjob-distributed-training
 ```
 
 ```

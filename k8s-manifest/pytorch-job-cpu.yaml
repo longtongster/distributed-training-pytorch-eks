@@ -26,7 +26,7 @@ spec:
                 - "--rdzv-id=456"
                 - "--rdzv-backend=c10d"
                 - "--rdzv-endpoint=pytorchjob-distributed-training-master-0.default.svc.cluster.local:29500"
-                - "distributed-training-2.py"
+                - "distributed-training.py"
               env:
                 - name: GLOO_SOCKET_IFNAME
                   value: "eth0"
@@ -52,7 +52,7 @@ spec:
                 - "--rdzv-id=456"
                 - "--rdzv-backend=c10d"
                 - "--rdzv-endpoint=pytorchjob-distributed-training-master-0.default.svc.cluster.local:29500"
-                - "distributed-training-2.py"
+                - "distributed-training.py"
               env:
                 - name: GLOO_SOCKET_IFNAME
                   value: "eth0"
