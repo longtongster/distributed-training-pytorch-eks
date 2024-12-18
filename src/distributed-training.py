@@ -138,7 +138,7 @@ def main():
     loss_function = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)
 
-    epochs = 100
+    epochs = 1
     for t in range(epochs):
         if dist.get_rank() == 0:
             print(f"Epoch {t+1}\n-------------------------------")

@@ -9,7 +9,7 @@ https://vmware.github.io/vSphere-machine-learning-extension/user-guide/training-
 
 ## STEP 1 - create IAM user
 
-The first step is to create a user with admin permissions and keys to programmatically acces aws resources (this is is required to use `eksctl create`).
+The first step is to create a user with admin permissions and keys to programmatically acces aws resources (this is required to use `eksctl create`).
 
 setup up the user with the credentials with the aws cli using `aws configure`.
 
@@ -25,7 +25,7 @@ The bucket name is used in the `cluster.yaml` that will be used to create the cl
 
 The first step is to create a cluster using the manifest in the `eks-cluster` directory. Note that there are also some other example cluster manifest that can be looked in. 
 
-`eksctl create cluster -f eks-cluster/cluster.yaml`
+`eksctl create cluster -f eks-manifest/cluster.yaml`
 
 Please note that this manifest also creates a managed nodegroup. In the nodegroup m5.large are used. These are the biggest instances I can get in the AWS sandbox that I am using. The manifest also creates a oidc provider and a service account `pytorch-training-sa` for S3 access to the bucket we created above. The creation of the cluster takes about 15-20 minutes.
 
@@ -86,7 +86,9 @@ See the `Dockerfile` used to create an image that has pytorch and boto3 installe
 
 build the docker image using:
 
-`docker build -t longtong/pytorch-cpu .`
+`
+docker build -t longtong/pytorch-cpu -f docker/Dockerfile .
+`
 
 if the images has not the username included use `docker tag <image-name> <username>/<image-name>`.
 

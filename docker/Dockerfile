@@ -12,7 +12,7 @@ RUN pip install matplotlib boto3
 RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
 
 # Copy your training script
-COPY distributed-training-2.py /app/
+COPY ./src/distributed-training.py /app/
 
 # Copy the data in the container
 COPY ./MNIST /app/MNIST
@@ -23,5 +23,5 @@ ENV PYTHONUNBUFFERED=1
 
 # Only set ENTRYPOINT, let Kubernetes control the arguments
 ENTRYPOINT ["torchrun"]
-CMD ["--nnodes=1", "--nproc_per_node=2", "distributed-training-2.py"]
+CMD ["--nnodes=1", "--nproc_per_node=2", "distributed-training.py"]
 
